@@ -1,4 +1,4 @@
-# Q2.py
+# Q2
 
 ## 高斯噪声
 
@@ -36,4 +36,90 @@
 ![image-20240419164924739](README/image-20240419164924739.png)
 
 把diff使用伪彩色空间展示出来
+
+
+
+# Q3
+
+## PSNR
+
+使用PSNR作为去噪评估指标
+
+![image-20240419190747922](README/image-20240419190747922.png)
+
+> https://zhuanlan.zhihu.com/p/50757421
+
+## SSIM
+
+> 这个没算
+
+PSNR（峰值信噪比）：用得最多，但是其值不能很好地反映人眼主观感受。一般取值范围：20-40.值越大，视频质量越好。
+
+SSIM（结构相似性）：计算稍复杂，其值可以较好地反映人眼主观感受。一般取值范围：0-1.值越大，视频质量越好。
+
+## 做了下网格搜索
+
+尝试寻找高斯滤波对于高斯噪声图像的参数寻优
+
+发现好像变化不大
+
+![image-20240419191200952](README/image-20240419191200952.png) 
+
+## 结果
+
+PSNR值
+
+![image-20240419203726890](README/image-20240419203726890.png) 
+
+### 滤波器说明
+
+以下分别按照
+
+基本的五种如下
+
+均值滤波处理 | 中位数滤波处理 | 高斯滤波处理
+
+双边滤波 | 非局部均值滤波
+
+（以及还会有某些特有的尝试的方法）
+
+### 高斯噪声
+
+5种
+
+| ![I1_gaussian_mean](README/I1_gaussian_mean-1713530704704-28.jpg) | ![I1_gaussian_median](README/I1_gaussian_median-1713530717432-30.jpg) |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| ![I1_gaussian_gaussian](README/I1_gaussian_gaussian-1713530730636-32.jpg) | ![I1_gaussian_bilateral](README/I1_gaussian_bilateral-1713530739329-34.jpg) |
+| ![I1_gaussian_non_local_means](README/I1_gaussian_non_local_means-1713530749258-36.jpg) |                                                              |
+|                                                              |                                                              |
+
+对于高斯噪声，**高斯滤波器、均值滤波器和中值滤波器的效果最好（差不太多）**。这是因为这两种滤波器都是线性滤波器，能够很好地处理高斯噪声。双边滤波器和非局部均值滤波器的效果较差，可能是因为它们在保护图像细节的同时，也保留了一部分噪声。
+
+### 泊松噪声
+
+5+1
+
+| ![I1_poisson_mean](README/I1_poisson_mean-1713530773782-38.jpg) | ![I1_poisson_median](README/I1_poisson_median-1713530786756-40.jpg) |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| ![I1_poisson_gaussian](README/I1_poisson_gaussian-1713530796661-42.jpg) | ![I1_poisson_bilateral](README/I1_poisson_bilateral.jpg)     |
+| ![I1_poisson_non_local_means](README/I1_poisson_non_local_means.jpg) |                                                              |
+| 下图为波士顿变换滤波结果                                     |                                                              |
+| ![I1_poisson_gaussian_anscombe](README/I1_poisson_gaussian_anscombe.jpg) |                                                              |
+
+对于泊松噪声，**非局部均值滤波器的效果最好**，紧随其后的是**高斯滤波器**和**波士顿变换后的高斯滤波器**。非局部均值滤波器是一种基于图像的自相似性的滤波器，它能够在保护图像细节的同时，有效地去除噪声。波士顿变换能够将泊松噪声转换为高斯噪声，然后就可以使用对高斯噪声处理效果较好的滤波器来进行去噪。
+
+### 椒盐噪声
+
+5+1
+
+| ![I1_salt_pepper_mean](README/I1_salt_pepper_mean-1713530978733-47.jpg) | ![I1_salt_pepper_median](README/I1_salt_pepper_median-1713530984255-49.jpg) |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| ![I1_salt_pepper_gaussian](README/I1_salt_pepper_gaussian-1713530993384-51.jpg) | ![I1_salt_pepper_bilateral](README/I1_salt_pepper_bilateral.jpg) |
+| ![I1_salt_pepper_non_local_means](README/I1_salt_pepper_non_local_means.jpg) |                                                              |
+| 下图为中值+双边                                              |                                                              |
+| ![I1_salt_pepper_median_bilateral](README/I1_salt_pepper_median_bilateral.jpg) |                                                              |
+
+对于盐和椒噪声，**中值+双边的效果最好，但其实也跟中值差不了多少，效果相较于其他很明显（虽然还留下了相当一部分“椒”点）**，这是因为中值滤波器能够很好地去除这种类型的尖峰噪声。双边滤波器和非局部均值滤波器的效果较差，可能是因为它们在保护图像细节的同时，也保留了一部分噪声。
+
+# Q4
 
