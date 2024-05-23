@@ -19,4 +19,5 @@ def rename_images(directory, prefix):
 
 
 # 使用函数
-rename_images('./images', 'bdl')
+# rename_images('./images', 'bdl')
+rename_images('./images/query', 'q')
