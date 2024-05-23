@@ -39,21 +39,103 @@
 | ![s_36](cv24b-homework03/s_36.jpg) | ![s_37](cv24b-homework03/s_37.jpg) | ![s_38](cv24b-homework03/s_38.jpg) | ![s_39](cv24b-homework03/s_39.jpg) | ![s_40](cv24b-homework03/s_40.jpg) |
 | ![s_41](cv24b-homework03/s_41.jpg) | ![s_42](cv24b-homework03/s_42.jpg) | ![s_43](cv24b-homework03/s_43.jpg) | ![s_44](cv24b-homework03/s_44.jpg) | ![s_45](cv24b-homework03/s_45.jpg) |
 
-
-
-
 ## Q2
 
 <div style="border: 2px solid #000; padding: 6px; border-radius: 5px; background-color: #f9f9f9; margin-bottom: 10px;">
   <span style="font-weight: bold; font-size: 12px;">要求说明</span>
   <p style="margin: 4px 0;">以全局RGB颜色直方图（每通道bin的数量为8）作为特征，进行图像检索。展示每个检索请求及对应前3个结果。</p>
 </div>
+### 特征抽取代码（全局RGB颜色直方图）
 
-【特征抽取代码贴这里】
+```python
+def extract_rgb_histogram(image_path, bins=8):
+    # 读取图像
+    image = cv2.imread(image_path)
+    if image is None:
+        raise ValueError(f"无法读取图像文件: {image_path}")
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-【检索（特征匹配）代码贴这里】
+    # 计算直方图
+    histogram = [cv2.calcHist([image], [i], None, [bins], [0, 256]) for i in range(3)]
+    # ravel()将(3, 8)的数组变成(24,)的数组
+    histogram = np.concatenate(histogram).ravel()
+    # 比如q1是679*500，那么histogram.sum()=679*500*3
+    histogram = histogram / histogram.sum()  # 归一化
+    return histogram
 
-【结果（检索请求+前3个结果）贴这里】
+
+# 处理文件夹中的所有图片
+def process_images(folder_path):
+    histograms = {}
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        if os.path.isfile(file_path) and file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
+            try:
+                histograms[filename] = extract_rgb_histogram(file_path)
+            except ValueError as e:
+                print(e)
+    return histograms
+
+
+# 完成图片RGB直方图(24个bin总共)的提取
+query_histograms = process_images('./images/query/')
+database_histograms = process_images('./images/database/')
+```
+
+### 检索（特征匹配）代码
+
+```python
+# 检索
+# 计算相似度
+# 每个query存储相似度最高的三个
+results = {}
+for query_name, query_histogram in query_histograms.items():
+    similarities = []
+    for database_name, database_histogram in database_histograms.items():
+        # 相似度计算使用欧式距离
+        similarity = np.linalg.norm(query_histogram - database_histogram)
+        similarities.append((database_name, similarity))
+    # 按相似度排序并取前三个
+    similarities.sort(key=lambda x: x[1])
+    results[query_name] = similarities[:3]
+    # 后三个保存下相似度最小的三个，主要是对比下数值
+    similarities.sort(key=lambda x: x[1], reverse=True)
+    results[query_name] += similarities[:3]
+
+# 打印结果
+for query_name, top_matches in results.items():
+    print(f"Query Image: {query_name}")
+    # 前三个是相似度最高（也就是欧式距离最小）的
+    print("Top 3 Matches:")
+    for i, (match_name, similarity) in enumerate(top_matches[:3], start=1):
+        print(f"  {i}. {match_name} - Similarity: {similarity:.2f}")
+    # 后三个是相似度最低（也就是欧式距离最大）的
+    print("Bottom 3 Matches:")
+    for i, (match_name, similarity) in enumerate(top_matches[3:], start=1):
+        print(f"  {i}. {match_name} - Similarity: {similarity:.2f}")
+```
+
+### 结果
+
+程序运行结果如下
+
+| <img src="cv24b-homework03/image-20240524001506089.png" alt="image-20240524001506089" style="zoom:50%;" /> | <img src="cv24b-homework03/image-20240524001546272.png" alt="image-20240524001546272" style="zoom:50%;" /> |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+
+|              query               |                        top1                         |                        top2                         |                        top3                         |
+| :------------------------------: | :-------------------------------------------------: | :-------------------------------------------------: | :-------------------------------------------------: |
+|             q_1.jpg              |                         32                          |                         10                          |                         40                          |
+| ![q_1](cv24b-homework03/q_1.jpg) | ![s_32](cv24b-homework03/s_32-1716481408687-6.jpg)  | ![s_10](cv24b-homework03/s_10-1716481417409-8.jpg)  | ![s_40](cv24b-homework03/s_40-1716481422716-10.jpg) |
+|             q_2.jpg              |                         14                          |                         16                          |                          8                          |
+| ![q_2](cv24b-homework03/q_2.jpg) | ![s_14](cv24b-homework03/s_14-1716481618764-21.jpg) | ![s_16](cv24b-homework03/s_16-1716481623052-23.jpg) |  ![s_8](cv24b-homework03/s_8-1716481629050-25.jpg)  |
+|             q_3.jpg              |                         30                          |                         15                          |                          3                          |
+| ![q_3](cv24b-homework03/q_3.jpg) | ![s_30](cv24b-homework03/s_30-1716481667138-27.jpg) | ![s_15](cv24b-homework03/s_15-1716481673960-29.jpg) |  ![s_3](cv24b-homework03/s_3-1716481676652-31.jpg)  |
+|             q_4.jpg              |                         32                          |                         40                          |                         36                          |
+| ![q_4](cv24b-homework03/q_4.jpg) | ![s_32](cv24b-homework03/s_32-1716481697485-33.jpg) | ![s_40](cv24b-homework03/s_40-1716481704022-35.jpg) | ![s_36](cv24b-homework03/s_36-1716481708437-37.jpg) |
+|             q_5.jpg              |                         43                          |                         13                          |                          9                          |
+| ![q_5](cv24b-homework03/q_5.jpg) | ![s_43](cv24b-homework03/s_43-1716481734603-39.jpg) | ![s_13](cv24b-homework03/s_13-1716481740942-41.jpg) |  ![s_9](cv24b-homework03/s_9-1716481749808-43.jpg)  |
+
+
 
 ## Q3
 
