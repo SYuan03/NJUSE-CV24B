@@ -33,8 +33,8 @@ def process_images(folder_path):
 
 
 # 完成图片RGB直方图(24个bin总共)的提取
-query_histograms = process_images('./images/query/')
-database_histograms = process_images('./images/database/')
+query_histograms = process_images('crawler/images/query/')
+database_histograms = process_images('crawler/images/database/')
 
 # 检索
 # 计算相似度

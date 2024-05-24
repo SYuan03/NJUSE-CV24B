@@ -33,8 +33,8 @@ def process_images_sift(folder_path):
 
 
 # 完成图片SIFT特征的提取
-query_sift_features = process_images_sift('./images/query/')
-database_sift_features = process_images_sift('./images/database/')
+query_sift_features = process_images_sift('crawler/images/query/')
+database_sift_features = process_images_sift('crawler/images/database/')
 
 # 检索
 # 计算相似度
